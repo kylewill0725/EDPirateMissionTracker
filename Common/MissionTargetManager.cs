@@ -21,7 +21,10 @@ namespace Common
         private readonly Dictionary<string, SortedList<string, Mission>> _factionMissions;
         private readonly Dictionary<string, Mission> _indexedMissions;
         private readonly SourceCache<Mission, string> _missionCache = new(m => m.MissionId);
+        public IObservable<IChangeSet<Mission, string>> Connect() => _missionCache.Connect();
         private readonly ConcurrentDictionary<string, Mission> _concurrentDict = new();
+        private string _station = "";
+        private string _system = "";
 
         public MissionTargetManager(IEliteDangerousApi api)
         {
@@ -45,11 +48,24 @@ namespace Common
                             TargetFaction = e.TargetFaction,
                             TotalKills = jo["KillCount"]!.Value<int>(),
                             TargetType = e.TargetType,
-                            IsWing = e.Wing
+                            IsWing = e.Wing,
+                            Station = _station,
+                            Reward = e.Reward,
+                            Title = e.LocalisedName,
+                            System = _system
                         };
                         return mission;
                     }).Where(m => m.TargetType == "$MissionUtil_FactionTag_Pirate;")
                     .Do(m => _concurrentDict.TryAdd(m.MissionId, m));
+
+            apiEvents.DockedEvent.Merge(Docked)
+                .Select(d => new StationInfo(d.StarSystem, d.StationName))
+                .Merge(apiEvents.LocationEvent.Merge(Location).Where(l => l.Docked).Select(l => new StationInfo(l.StarSystem, l.StationName)))
+                .Subscribe(station =>
+                {
+                    _station = station.Station;
+                    _system = station.System;
+                });
 
             var redirected =
                 apiEvents.MissionRedirectedEvent.Merge(MissionRedirected)
@@ -104,9 +120,12 @@ namespace Common
         public Subject<MissionFailedEvent> MissionFailed { get; } = new();
         public Subject<MissionAbandonedEvent> MissionAbandoned { get; } = new();
         public Subject<MissionCompletedEvent> MissionCompleted { get; } = new();
+        public Subject<LocationEvent> Location { get; } = new();
+        public Subject<DockedEvent> Docked { get; } = new();
         public Subject<BountyEvent> Bounty { get; } = new();
     }
-    
+
+    public record StationInfo(string System, string Station);
     
     [DebuggerDisplay("{Faction} - {CurrentKills}/{TotalKills}")]
     public class Mission
@@ -123,6 +142,10 @@ namespace Common
         public int TotalKills { get; init; }
         public string TargetType { get; init; }
         public bool IsFilled { get; set; }
+        public string Station { get; init; }
+        public long Reward { get; init; }
+        public string Title { get; init; }
+        public string System { get; init; }
 
         public override string ToString()
         {

@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using ReactiveUI;
 using Wpf.ViewModels;
 
@@ -29,7 +18,20 @@ namespace Wpf
             this.WhenActivated(disposables =>
             {
                 this.OneWayBind(ViewModel, x => x.Router, x => x.RoutedViewHost.Router);
+                this.OneWayBind(ViewModel, 
+                    vm => vm.DoneLoading, 
+                    view => view.Loading.Visibility,
+                    doneLoading => !doneLoading ? Visibility.Visible : Visibility.Collapsed);
+                this.OneWayBind(ViewModel,
+                    vm => vm.DoneLoading,
+                    view => view.RoutedViewHost.Visibility,
+                    doneLoading => doneLoading ? Visibility.Visible : Visibility.Collapsed);
             });
+        }
+
+        private void UIElement_OnMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            Debug.WriteLine("Clicked");
         }
     }
 }

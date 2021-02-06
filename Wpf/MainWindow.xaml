@@ -9,12 +9,14 @@
         xmlns:reactiveUi="http://reactiveui.net"
         xmlns:viewModels="clr-namespace:Wpf.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="450" Width="800"
+        Topmost="True">
+    <Grid MouseUp="UIElement_OnMouseUp">
         <reactiveUi:RoutedViewHost 
             Grid.Row="0" 
             x:Name="RoutedViewHost"
             HorizontalContentAlignment="Stretch"
-            VerticalContentAlignment="Stretch" />
+            VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
+        <TextBlock x:Name="Loading">Loading</TextBlock>
     </Grid>
 </reactiveUi:ReactiveWindow>

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using ReactiveUI;
 using Splat;
 using Splat.Microsoft.Extensions.DependencyInjection;
+using Wpf.ViewModels;
 
 namespace Wpf
 {
@@ -28,11 +29,14 @@ namespace Wpf
         public App()
         {
             InitDependencyInjection();
-            var api = Services.GetService<MainWindow>();
+            var view = _host.Services.GetService<IViewFor<MainWindowViewModel>>();
+            view!.ViewModel = Services.GetService<MainWindowViewModel>();
+            (view as Window)?.Show();
         }
 
         private void InitDependencyInjection()
         {
+            var assembly = Assembly.GetCallingAssembly(); // Pulled out because calling inside configureservices results in the Hosting assembly
             _host =
                 Host.CreateDefaultBuilder()
                     .ConfigureServices(services =>
@@ -41,15 +45,17 @@ namespace Wpf
                         var resolver = Locator.CurrentMutable;
                         resolver.InitializeSplat();
                         resolver.InitializeReactiveUI();
-                        resolver.RegisterViewsForViewModels(Assembly.GetCallingAssembly());
+                        resolver.RegisterViewsForViewModels(assembly);
                         
-                        services.AddEliteAPI(listener =>
-                        {
-                            listener.AddEventModule<MissionTargetManager>();
-                        });
-                        services.AddTransient<BountyCatchUp>();
+                        services.AddEliteAPI();
+                        services.AddTransient<MissionCatchUp>();
                         services.AddTransient<IJournalReader, JournalReader>();
                         services.AddSingleton<MissionTargetManager>();
+                        services.AddSingleton<MainWindowViewModel>();
+                        services.AddSingleton<IScreen>(x => x.GetService<MainWindowViewModel>());
+                        services.AddSingleton<CombatViewModel>();
+                        services.AddSingleton<DockedViewModel>();
+                        services.AddSingleton<StateTracker>();
                     })
                     .Build();
             Services.UseMicrosoftDependencyResolver();

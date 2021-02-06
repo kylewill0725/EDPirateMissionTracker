@@ -30,6 +30,7 @@ namespace Common
 
         public void CatchUp()
         {
+            Console.WriteLine("Catching up");
             foreach (var evt in GetRecentMissionEvents())
             {
                 switch (evt)
@@ -52,6 +53,12 @@ namespace Common
                     case BountyEvent bounty:
                         _missionTargetManager.Bounty.OnNext(bounty);
                         break;
+                    case LocationEvent location:
+                        _missionTargetManager.Location.OnNext(location);
+                        break;
+                    case DockedEvent docked:
+                        _missionTargetManager.Docked.OnNext(docked);
+                        break;
                 }
             }
             
@@ -61,6 +68,7 @@ namespace Common
             _missionTargetManager.MissionAbandoned.OnCompleted();
             _missionTargetManager.MissionCompleted.OnCompleted();
             _missionTargetManager.Bounty.OnCompleted();
+            _missionTargetManager.Location.OnCompleted();
         }
 
         private IEnumerable<EventBase> GetRecentMissionEvents()
@@ -101,6 +109,8 @@ namespace Common
                 .TypeOf<MissionCompletedEvent>()
                 .TypeOf<MissionRedirectedEvent>()
                 .TypeOf<MissionFailedEvent>()
+                .TypeOf<LocationEvent>()
+                .TypeOf<DockedEvent>()
                 .TypeOf<BountyEvent>();
 
         }

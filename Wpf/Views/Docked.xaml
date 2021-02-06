@@ -10,7 +10,27 @@
     xmlns:viewModels="clr-namespace:Wpf.ViewModels"
     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
-        <TextBlock>Docked</TextBlock>
-    </Grid>
+    <DockPanel LastChildFill="True">
+        <Grid DockPanel.Dock="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="StackHeight" />
+            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="StackWidth" />
+            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TotalValue" />
+            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TotalMissions" />
+        </Grid>
+        <ListView x:Name="Missions" DockPanel.Dock="Top" HorizontalContentAlignment="Stretch">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <local:MissionItem ViewModel="{Binding}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </DockPanel>
 </reactiveUi:ReactiveUserControl>

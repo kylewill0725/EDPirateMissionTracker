@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using ReactiveUI;
 
 namespace Wpf.Views
 {
@@ -7,6 +8,12 @@ namespace Wpf.Views
         public Docked()
         {
             InitializeComponent();
+            this.WhenActivated(disposables =>
+            {
+                this.OneWayBind(ViewModel,
+                    vm => vm.Missions,
+                    view => view.Missions.ItemsSource);
+            });
         }
     }
 }
