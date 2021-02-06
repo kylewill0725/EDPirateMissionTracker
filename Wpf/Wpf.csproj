@@ -4,6 +4,7 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net5.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
+        <AssemblyName>EDPirateMissionTracker</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,6 +18,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Common\Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Properties\PublishProfiles\" />
     </ItemGroup>
 
 </Project>
