@@ -53,8 +53,8 @@ namespace Wpf
                         services.AddSingleton<MissionTargetManager>();
                         services.AddSingleton<MainWindowViewModel>();
                         services.AddSingleton<IScreen>(x => x.GetService<MainWindowViewModel>());
-                        services.AddSingleton<CombatViewModel>();
-                        services.AddSingleton<DockedViewModel>();
+                        services.AddSingleton<MissionStatsViewModel>();
+                        services.AddSingleton<TurnInViewModel>();
                         services.AddSingleton<StateTracker>();
                     })
                     .Build();

@@ -12,10 +12,10 @@ namespace Wpf
         {
             var apiEvents = api.Events.Events();
             Station = new BehaviorSubject<string>("");
-            apiEvents.LocationEvent
-                .Where(l => l.Docked)
-                .Select(l => l.StationName)
-                .Merge(apiEvents.DockedEvent.Select(d => d.StationName))
+            apiEvents.DockedEvent.Select(d => d.StationName)
+                .Merge(apiEvents.LocationEvent
+                    .Where(l => l.Docked)
+                    .Select(l => l.StationName))
                 .Merge(apiEvents.UndockedEvent.Select(_ => ""))
                 .Subscribe(x => Station.OnNext(x), _ => {}, () => Station.OnCompleted());
         }

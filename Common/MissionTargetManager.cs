@@ -18,22 +18,18 @@ namespace Common
 {
     public class MissionTargetManager
     {
-        private readonly Dictionary<string, SortedList<string, Mission>> _factionMissions;
-        private readonly Dictionary<string, Mission> _indexedMissions;
         private readonly SourceCache<Mission, string> _missionCache = new(m => m.MissionId);
         public IObservable<IChangeSet<Mission, string>> Connect() => _missionCache.Connect();
-        private readonly ConcurrentDictionary<string, Mission> _concurrentDict = new();
+        private readonly ConcurrentDictionary<string, Mission> _missions = new();
+        private readonly ConcurrentDictionary<string, SortedList<string, Mission>> _factions = new();
         private string _station = "";
         private string _system = "";
 
         public MissionTargetManager(IEliteDangerousApi api)
         {
-            _factionMissions = new Dictionary<string, SortedList<string, Mission>>();
-            _indexedMissions = new Dictionary<string, Mission>();
-
             var apiEvents = api.Events.Events();
 
-            var acceptedPirateMissions = 
+            var acceptedPirateMissions =
                 apiEvents.MissionAcceptedEvent.Merge(MissionAccepted)
                     .Where(m => m.Name.ToLower().Contains("massacre"))
                     .Select(e =>
@@ -56,11 +52,22 @@ namespace Common
                         };
                         return mission;
                     }).Where(m => m.TargetType == "$MissionUtil_FactionTag_Pirate;")
-                    .Do(m => _concurrentDict.TryAdd(m.MissionId, m));
+                    .Do(m => _missions.TryAdd(m.MissionId, m))
+                    .Do(m =>
+                    {
+                        if (!_factions.TryGetValue(m.Faction, out var missions))
+                        {
+                            missions = new SortedList<string, Mission>();
+                            _factions.TryAdd(m.Faction, missions);
+                        }
+
+                        missions.Add(m.MissionId, m);
+                    });
 
             apiEvents.DockedEvent.Merge(Docked)
                 .Select(d => new StationInfo(d.StarSystem, d.StationName))
-                .Merge(apiEvents.LocationEvent.Merge(Location).Where(l => l.Docked).Select(l => new StationInfo(l.StarSystem, l.StationName)))
+                .Merge(apiEvents.LocationEvent.Merge(Location).Where(l => l.Docked)
+                    .Select(l => new StationInfo(l.StarSystem, l.StationName)))
                 .Subscribe(station =>
                 {
                     _station = station.Station;
@@ -69,48 +76,87 @@ namespace Common
 
             var redirected =
                 apiEvents.MissionRedirectedEvent.Merge(MissionRedirected)
-                    .Where(e => _concurrentDict.ContainsKey(e.MissionId))
+                    .Where(e => _missions.ContainsKey(e.MissionId))
                     .Select(e =>
                     {
-                        var mission = _concurrentDict[e.MissionId];
-                        mission.CurrentKills = mission.TotalKills;
+                        var mission = _missions[e.MissionId];
+                        
+                        // mission.CurrentKills = mission.TotalKills;
+                        
+                        if (_factions.TryGetValue(mission.Faction, out var missions))
+                        {
+                            missions.Remove(mission.MissionId);
+                        }
+                        
                         mission.IsFilled = true;
                         return mission;
                     });
-            
-            var completed = 
+
+            var completed =
                 apiEvents.MissionCompletedEvent.Merge(MissionCompleted)
-                    .Where(e => _concurrentDict.ContainsKey(e.MissionId))
+                    .Where(e => _missions.ContainsKey(e.MissionId))
                     .Select(e =>
                     {
-                        // _concurrentDict.TryGetValue(e.MissionId, out var mission);
-                        _concurrentDict.Remove(e.MissionId, out var mission);
+                        // _missions.Remove(e.MissionId, out var mission);
+                        _missions.TryGetValue(e.MissionId, out var mission);
+                        
+                        if (_factions.TryGetValue(mission!.Faction, out var missions))
+                        {
+                            missions.Remove(mission.MissionId);
+                        }
+                        
                         mission!.IsComplete = true;
                         return mission;
                     });
-            
+
             var failed =
                 apiEvents.MissionFailedEvent.Merge(MissionFailed).Select(e => e.MissionId)
                     .Merge(
                         apiEvents.MissionAbandonedEvent.Merge(MissionAbandoned)
                             .Select(e => e.MissionId)
-                        )
-                    .Where(id => _concurrentDict.ContainsKey(id))
+                    )
+                    .Where(id => _missions.ContainsKey(id))
                     .Select(id =>
                     {
-                        // _concurrentDict.TryGetValue(id, out var mission);
-                        _concurrentDict.Remove(id, out var mission);
+                        // _missions.Remove(id, out var mission);
+                        _missions.TryGetValue(id, out var mission);
+                        
+                        if (_factions.TryGetValue(mission!.Faction, out var missions))
+                        {
+                            missions.Remove(id);
+                        }
+                        
                         mission!.IsFailed = true;
                         return mission;
+                    });
+
+            var bountyUpdates =
+                Bounty.Merge(apiEvents.BountyEvent)
+                    .SelectMany(b =>
+                    {
+                        return _factions
+                            .Where(pair => pair.Value.Count > 0 
+                                           && pair.Value.First().Value.TargetFaction == b.VictimFaction)
+                            .Select(pair =>
+                            {
+                                var mission = pair.Value.First().Value;
+                                if (mission.TargetFaction != b.VictimFaction)
+                                    throw new Exception("Mission should have existed");
+
+                                mission.CurrentKills += 1;
+                                return mission;
+                            });
                     });
 
             completed
                 .Merge(failed)
                 .Subscribe(mission => _missionCache.RemoveKey(mission.MissionId));
-            
+
             // Emits on every change. Should be a hot observable
-            IObservable<Mission> missions = acceptedPirateMissions
-                .Merge(redirected);
+            IObservable<Mission> missions =
+                acceptedPirateMissions
+                    .Merge(bountyUpdates)
+                    .Merge(redirected);
             _missionCache.PopulateFrom(missions);
         }
 
@@ -126,8 +172,8 @@ namespace Common
     }
 
     public record StationInfo(string System, string Station);
-    
-    [DebuggerDisplay("{Faction} - {CurrentKills}/{TotalKills}")]
+
+    [DebuggerDisplay("{Faction} - {CurrentKills}/{TotalKills} - Filled {IsFilled} - Success {IsComplete} - Fail {IsFailed}")]
     public class Mission
     {
         public string MissionId { get; init; }

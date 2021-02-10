@@ -16,24 +16,27 @@ namespace Common
         private readonly IJournalDirectoryProvider _journalDirectoryProvider;
         private readonly IEventProvider _eventProvider;
 
+        public string EventFile { get; set; }
+
         public JournalReader(IJournalDirectoryProvider journalDirectoryProvider, IEventProvider eventProvider)
         {
             _journalDirectoryProvider = journalDirectoryProvider;
             _eventProvider = eventProvider;
         }
-        
+
         public IEnumerable<EventBase> ReadAllEvents()
         {
             IEnumerable<EventBase> CreateEnumerable()
             {
                 var files =
-                    from file in _journalDirectoryProvider.FindJournalDirectory().Result.GetFiles("Journal.*.log")
-                    orderby file.Name descending
-                    select file;
+                    string.IsNullOrWhiteSpace(EventFile)
+                        ? from file in _journalDirectoryProvider.FindJournalDirectory().Result.GetFiles("Journal.*.log")
+                        orderby file.Name descending
+                        select file
+                        : new[] {new FileInfo(EventFile), new FileInfo(EventFile)}.AsEnumerable();
 
                 foreach (var file in files.Skip(1))
                 {
-                    
                     using var fileReader =
                         File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     using var sr = new StreamReader(fileReader);
@@ -57,7 +60,7 @@ namespace Common
 
                         if (ev != null)
                             yield return ev;
-                    }                    
+                    }
                 }
             }
 
@@ -69,7 +72,10 @@ namespace Common
             IEnumerable<EventBase> CreateEnumerable()
             {
                 var fileList = _journalDirectoryProvider.FindJournalDirectory().Result.GetFiles("Journal.*.log");
-                var files = fileList.SkipWithLastItem(f => f.CreationTimeUtc < time).SkipLast(1);
+                var files =
+                    string.IsNullOrWhiteSpace(EventFile) ?
+                    fileList.SkipWithLastItem(f => f.CreationTimeUtc < time).SkipLast(1)
+                    : new []{ new FileInfo(EventFile) };
 
                 foreach (var file in files)
                 {
@@ -90,7 +96,6 @@ namespace Common
 
                         if (ev != null && ev.Timestamp >= time)
                             yield return ev;
-                        
                     }
                 }
             }
@@ -103,7 +108,7 @@ namespace Common
             return new JournalReadBuilder(this).TypeOf<T>();
         }
 
-        internal IEnumerable<EventBase> ReadEventsWithFilter(Func<EventBase,bool> filterFunc)
+        internal IEnumerable<EventBase> ReadEventsWithFilter(Func<EventBase, bool> filterFunc)
         {
             return ReadAllEvents().Where(filterFunc);
         }
@@ -113,7 +118,7 @@ namespace Common
             return ReadAllEventsSince(start).Where(filterFunc);
         }
     }
-    
+
     public class JournalReadBuilder : IJournalReadBuilder
     {
         private readonly JournalReader _reader;
@@ -123,7 +128,7 @@ namespace Common
         {
             _reader = reader;
         }
-        
+
         public IJournalReadBuilder TypeOf<T>() where T : EventBase
         {
             _filterFunc =

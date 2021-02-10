@@ -74,8 +74,7 @@ namespace Common
         private IEnumerable<EventBase> GetRecentMissionEvents()
         {
             var allMissions = GetInterestingEvents().ReadEventsSince(DateTime.MinValue);
-            var unaccountedForMissions = new HashSet<string>();
-            var events = _journalReader.TypeOf<MissionsEvent>().TypeOf<MissionAcceptedEvent>().ReadEvents();
+            var events = _journalReader.TypeOf<MissionsEvent>().ReadEvents();
             var missions = events.OfType<MissionsEvent>().FirstOrDefault();
             do
             {
@@ -87,12 +86,6 @@ namespace Common
                 if (!missions.Active.Any())
                 {
                     return GetInterestingEvents().ReadEventsSince(missions.Timestamp);
-                }
-
-                foreach (var missionId in missions.Active.Cast<JObject>()
-                    .Select(jo => jo["MissionID"]!.Value<string>()))
-                {
-                    unaccountedForMissions.Add(missionId);
                 }
 
                 missions = events.OfType<MissionsEvent>().FirstOrDefault();

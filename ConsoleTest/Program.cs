@@ -25,15 +25,18 @@ namespace ConsoleTest
                     {
                         services.AddEliteAPI();
                         services.AddTransient<MissionCatchUp>();
-                        services.AddTransient<IJournalReader, JournalReader>();
+                        services.AddSingleton<JournalReader>();
+                        services.AddSingleton<IJournalReader, JournalReader>(services => services.GetService<JournalReader>()!);
                         services.AddSingleton<MissionTargetManager>();
                     })
                     .Build();
             var api = host.Services.GetService<IEliteDangerousApi>();
+            // host.Services.GetService<JournalReader>()!.EventFile = "testExample.txt";
             host.Services.GetService<MissionCatchUp>()!.CatchUp();
             var targetManager = host.Services.GetService<MissionTargetManager>()!;
-            await api.StartAsync();
+            // await api.StartAsync();
 
+            Debugger.Break();
             while (true)
                 await Task.Delay(500);
         }

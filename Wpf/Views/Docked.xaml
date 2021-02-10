@@ -1,5 +1,5 @@
 ﻿<reactiveUi:ReactiveUserControl
-    x:TypeArguments="viewModels:DockedViewModel"
+    x:TypeArguments="viewModels:TurnInViewModel"
     x:Class="Wpf.Views.Docked"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

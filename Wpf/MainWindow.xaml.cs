@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Input;
 using ReactiveUI;
@@ -17,15 +18,18 @@ namespace Wpf
 
             this.WhenActivated(disposables =>
             {
-                this.OneWayBind(ViewModel, x => x.Router, x => x.RoutedViewHost.Router);
+                this.OneWayBind(ViewModel, x => x.Router, x => x.RoutedViewHost.Router)
+                    .DisposeWith(disposables);
                 this.OneWayBind(ViewModel, 
                     vm => vm.DoneLoading, 
                     view => view.Loading.Visibility,
-                    doneLoading => !doneLoading ? Visibility.Visible : Visibility.Collapsed);
+                    doneLoading => !doneLoading ? Visibility.Visible : Visibility.Collapsed)
+                    .DisposeWith(disposables);
                 this.OneWayBind(ViewModel,
                     vm => vm.DoneLoading,
                     view => view.RoutedViewHost.Visibility,
-                    doneLoading => doneLoading ? Visibility.Visible : Visibility.Collapsed);
+                    doneLoading => doneLoading ? Visibility.Visible : Visibility.Collapsed)
+                    .DisposeWith(disposables);
             });
         }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Reactive.Linq;
 using Common;
 using DynamicData;
@@ -10,7 +9,7 @@ using Wpf.Views;
 
 namespace Wpf.ViewModels
 {
-    public class DockedViewModel : ReactiveObject, IRoutableViewModel
+    public class TurnInViewModel : ReactiveObject, IRoutableViewModel
     {
         public string UrlPathSegment { get; } = "Docked";
         private readonly ReadOnlyObservableCollection<MissionItemViewModel> _missions;
@@ -18,10 +17,10 @@ namespace Wpf.ViewModels
         
         public IScreen HostScreen { get; }
 
-        public DockedViewModel(IScreen hostScreen, MissionTargetManager missionTargetManager, StateTracker state)
+        public TurnInViewModel(IScreen hostScreen, MissionTargetManager missionTargetManager, StateTracker state)
         {
             HostScreen = hostScreen;
-            var comparer = SortExpressionComparer<Mission>.Descending(m => m.IsWing).ThenByDescending(m => m.MissionId);
+            var comparer = SortExpressionComparer<Mission>.Descending(m => m.IsWing).ThenByDescending(m => m.IsFilled).ThenByDescending(m => m.MissionId);
             missionTargetManager
                 .Connect()
                 .Sort(comparer)
