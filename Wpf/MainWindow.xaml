@@ -10,7 +10,7 @@
         xmlns:viewModels="clr-namespace:Wpf.ViewModels"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
-        d:Topmost="True"
+        Topmost="True"
         >
     <Grid MouseUp="UIElement_OnMouseUp">
         <reactiveUi:RoutedViewHost 
