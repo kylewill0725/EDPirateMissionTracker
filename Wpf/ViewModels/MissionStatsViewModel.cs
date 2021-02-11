@@ -36,7 +36,9 @@ namespace Wpf.ViewModels
                 .Subscribe();
 
             var factionChanges =
-                Factions.WhenAnyPropertyChanged();
+                Factions
+                    .WhenAnyPropertyChanged()
+                    .Prepend(Factions);
 
             factionChanges
                 .Select(x => x.Select(f => f.KillsRemaining).Append(0).Max())
