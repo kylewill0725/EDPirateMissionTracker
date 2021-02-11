@@ -35,7 +35,8 @@
         <StackPanel Grid.Row="1">
             <controls:DataWithLabel x:Name="StackHeight" Label="StackHeight: " />
             <controls:DataWithLabel x:Name="StackWidth" Label="Stack Width: " />
-            <controls:DataWithLabel x:Name="MissionCount" Label="Mission Count: " />
+            <controls:DataWithLabel x:Name="MissionCount" Label="Total Mission Count: " />
+            <controls:DataWithLabel x:Name="MissionsDone" Label="Finished Mission Count: " />
         </StackPanel>
         <StackPanel Grid.Row="1" Grid.Column="1">
             <controls:DataWithLabel x:Name="TotalKills" Label="Total Kills: " />

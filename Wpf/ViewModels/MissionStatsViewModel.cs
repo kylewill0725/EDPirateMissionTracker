@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Common;
 using DynamicData;
+using DynamicData.Aggregation;
 using DynamicData.Binding;
 using DynamicData.PLinq;
 using ReactiveUI;
@@ -24,21 +25,23 @@ namespace Wpf.ViewModels
         {
             HostScreen = host;
 
-            missionTargetManager
-                .Connect()
-                .Select(m => m)
-                .Group(m => m.Faction)
-                .Filter(g => g.Cache.Count > 0)
-                .Transform(g => new FactionGroup(g))
-                .DisposeMany()
+            var factionUpdates =
+                missionTargetManager
+                    .Connect()
+                    .Select(m => m)
+                    .Group(m => m.Faction)
+                    .Filter(g => g.Cache.Count > 0)
+                    .Transform(g => new FactionGroup(g))
+                    .DisposeMany();
+            factionUpdates
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out _factions)
                 .Subscribe();
 
             var factionChanges =
-                Factions
+                factionUpdates
                     .WhenAnyPropertyChanged()
-                    .Prepend(Factions);
+                    .Select(_ => Factions);
 
             factionChanges
                 .Select(x => x.Select(f => f.KillsRemaining).Append(0).Max())
@@ -49,6 +52,9 @@ namespace Wpf.ViewModels
             factionChanges
                 .Select(x => x.Select(y => y.MissionCount).Sum())
                 .ToPropertyEx(this, x => x.MissionCount);
+            factionChanges
+                .Select(x => x.Select(y => y.MissionsDoneCount).Sum())
+                .ToPropertyEx(this, x => x.MissionsDone);
             factionChanges
                 .Select(x => x.Select(y => y.KillsRemaining).Sum())
                 .ToPropertyEx(this, x => x.TotalKills);
@@ -86,6 +92,7 @@ namespace Wpf.ViewModels
         public int MissionCount { [ObservableAsProperty] get; }
 
         public int StackWidth { [ObservableAsProperty] get; }
+        public int MissionsDone { [ObservableAsProperty] get; }
     }
 
     public class FactionGroup : ReactiveObject, IDisposable
@@ -107,13 +114,16 @@ namespace Wpf.ViewModels
                     .Bind(out _missionKillsRemaining)
                     .Subscribe();
 
-            var kcChanges = 
+            var kcChanges =
                 _missionKillsRemaining
-                .WhenAnyPropertyChanged()
-                .Prepend(_missionKillsRemaining); // Send initial state
+                    .WhenAnyPropertyChanged()
+                    .Prepend(_missionKillsRemaining); // Send initial state
             kcChanges
                 .Select(x => x.Count)
                 .ToPropertyEx(this, x => x.MissionCount);
+            kcChanges
+                .Select(x => x.Where(y => y.IsFilled).Count())
+                .ToPropertyEx(this, x => x.MissionsDoneCount);
             kcChanges
                 .Select(x => x.Sum(i => i.Total))
                 .ToPropertyEx(this, x => x.KillsTotal);
@@ -154,6 +164,7 @@ namespace Wpf.ViewModels
         public int Mission3Remaining { [ObservableAsProperty] get; }
         public int KillsRemaining { [ObservableAsProperty] get; }
         public int MissionCount { [ObservableAsProperty] get; }
+        public int MissionsDoneCount { [ObservableAsProperty] get; }
         public int KillsTotal { [ObservableAsProperty] get; }
         public long RewardTotal { [ObservableAsProperty] get; }
 

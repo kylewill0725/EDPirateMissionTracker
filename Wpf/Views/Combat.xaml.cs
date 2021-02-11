@@ -33,6 +33,11 @@ namespace Wpf.Views
                 ).DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,
+                    vm => vm.MissionsDone,
+                    view => view.MissionsDone.Data
+                ).DisposeWith(disposable);
+
+                this.OneWayBind(ViewModel,
                     vm => vm.TotalKills,
                     view => view.TotalKills.Data
                 ).DisposeWith(disposable);

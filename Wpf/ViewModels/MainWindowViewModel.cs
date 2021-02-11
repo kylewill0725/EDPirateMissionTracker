@@ -73,17 +73,20 @@ namespace Wpf.ViewModels
                     .CombineLatest(filledMissionCountChanged,
                         (dockedLocation, change) => new LocationChangePair(dockedLocation, change))
                     .Delay(_ => api.Events().OnCatchedUp.ObserveOn(RxApp.MainThreadScheduler))
-                    .Select(e =>
+                    .Select(e => {
+                        var condition =
                         e.Location.IsDocked
                         && e.StationMissionInfo.Any(x =>
                             x.Current.MissionCount > 0
                             && x.Current.HasFilled
-                            && x.Current.Station == e.Location.StationName)
+                            && x.Current.Station == e.Location.StationName);
+                        return condition
                             // true
-                            ? (IRoutableViewModel) ((App) Application.Current).Services
+                            ? (IRoutableViewModel)((App)Application.Current).Services
                             .GetService<TurnInViewModel>()!
-                            : (IRoutableViewModel) ((App) Application.Current).Services
-                            .GetService<MissionStatsViewModel>()!
+                            : (IRoutableViewModel)((App)Application.Current).Services
+                            .GetService<MissionStatsViewModel>()!;
+                            }
                     )
                     .Do(vm => Router.Navigate.Execute(vm))
                     .Subscribe(_ => { })
