@@ -11,15 +11,42 @@ namespace Wpf
         public StateTracker(IEliteDangerousApi api)
         {
             var apiEvents = api.Events.Events();
-            Station = new BehaviorSubject<string>("");
-            apiEvents.DockedEvent.Select(d => d.StationName)
+            
+            apiEvents.DockedEvent.Select(d => new DockedUpdate(true, d.StationName))
                 .Merge(apiEvents.LocationEvent
                     .Where(l => l.Docked)
-                    .Select(l => l.StationName))
-                .Merge(apiEvents.UndockedEvent.Select(_ => ""))
-                .Subscribe(x => Station.OnNext(x), _ => {}, () => Station.OnCompleted());
+                    .Select(l => new DockedUpdate(l.Docked, l.StationName)))
+                .Merge(apiEvents.UndockedEvent.Select(_ => new DockedUpdate(false, "")))
+                .Subscribe(x =>
+                {
+                    Station.OnNext(x.Station);
+                    IsDocked.OnNext(x.IsDocked);
+                }, _ => {}, () =>
+                {
+                    Station.OnCompleted();
+                    IsDocked.OnCompleted();
+                });
+            
+            apiEvents.FsdJumpEvent.Select(d => d.StarSystem)
+                .Merge(apiEvents.LocationEvent.Select(l => l.StarSystem))
+                .Subscribe(x => System.OnNext(x), _ => {}, () => System.OnCompleted());
+
+            Location =
+                Station
+                    .CombineLatest(System, (station, system) => (station, system))
+                    .CombineLatest(IsDocked,
+                        (stationUpdate, isDocked) =>
+                            new LocationUpdate(isDocked, stationUpdate.system, stationUpdate.station));
         }
 
-        public BehaviorSubject<string> Station { get; }
+        public IObservable<LocationUpdate> Location { get; }
+
+        public BehaviorSubject<string> Station { get; } = new("");
+        public BehaviorSubject<string> System { get; } = new("");
+        public BehaviorSubject<bool> IsDocked { get; } = new(false);
+
+        private record DockedUpdate(bool IsDocked, string Station);
     }
+
+    public record LocationUpdate(bool IsDocked, string System, string Station);
 }

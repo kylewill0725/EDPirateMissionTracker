@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using Common;
 using DynamicData;
@@ -24,12 +26,10 @@ namespace Wpf.ViewModels
         public bool DoneLoading { [ObservableAsProperty] get; }
 
         public MainWindowViewModel(IEliteDangerousApi api, MissionCatchUp missionCatchUp,
-            MissionTargetManager missionTargetManager)
+            MissionTargetManager missionTargetManager, StateTracker tracker)
         {
             Router = new RoutingState();
             Activator = new ViewModelActivator();
-
-            missionCatchUp.CatchUp();
 
             api.Events().OnCatchedUp
                 .Select(_ => true)
@@ -37,71 +37,60 @@ namespace Wpf.ViewModels
                 .ToPropertyEx(this, x => x.DoneLoading);
 
             // Change what is showing
-            var eliteEvents = api.Events.Events();
-            this.WhenActivated((CompositeDisposable disposables) =>
+            this.WhenActivated(disposables =>
             {
                 var filledMissionCountChanged =
                     missionTargetManager
                         .Connect()
-                        .Group(mission => mission.Station)
+                        .Group(mission => (mission.System, mission.Station))
                         .Transform(g => new StationMissionsGroup(g))
                         .DisposeMany()
-                        .ObserveOn(RxApp.MainThreadScheduler);
+                        .ObserveOn(RxApp.MainThreadScheduler)
+                        .Bind(out var stationMissions);
 
-
-                var initialLocation =
-                    eliteEvents
-                        .LocationEvent
-                        .Select(l => new DockedLocationPair(l.Docked, l.StationName))
-                        .ObserveOn(RxApp.MainThreadScheduler);
-
-                var undocked =
-                    eliteEvents
-                        .UndockedEvent
-                        .Select(d => new DockedLocationPair(false, ""))
-                        .ObserveOn(RxApp.MainThreadScheduler);
-
-                var docked =
-                    eliteEvents
-                        .DockedEvent
-                        .Select(d => new DockedLocationPair(true, d.StationName))
-                        .ObserveOn(RxApp.MainThreadScheduler);
-
-                initialLocation
-                    .Merge(undocked)
-                    .Merge(docked)
-                    .CombineLatest(filledMissionCountChanged,
-                        (dockedLocation, change) => new LocationChangePair(dockedLocation, change))
-                    .Delay(_ => api.Events().OnCatchedUp.ObserveOn(RxApp.MainThreadScheduler))
-                    .Select(e => {
-                        var condition =
-                        e.Location.IsDocked
-                        && e.StationMissionInfo.Any(x =>
-                            x.Current.MissionCount > 0
-                            && x.Current.HasFilled
-                            && x.Current.Station == e.Location.StationName);
-                        return condition
-                            // true
-                            ? (IRoutableViewModel)((App)Application.Current).Services
-                            .GetService<TurnInViewModel>()!
-                            : (IRoutableViewModel)((App)Application.Current).Services
-                            .GetService<MissionStatsViewModel>()!;
+                tracker.Location
+                    .CombineLatest(filledMissionCountChanged.WhenPropertyChanged(x => x.MissionCount), (dockedLocation, _) => dockedLocation)
+                    .CombineLatest(api.Events().OnCatchedUp.Delay(TimeSpan.FromMilliseconds(50)), (location, _) => location)
+                    .Where(_ => DoneLoading)
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Select(e =>
+                        {
+                            bool showTurnIn;
+                            if (e.IsDocked)
+                            {
+                                showTurnIn = stationMissions.Any(sm =>
+                                    sm.HasFilled
+                                    && sm.Station == e.Station);
                             }
+                            else
+                            {
+                                showTurnIn =
+                                    stationMissions.Any(sm =>
+                                        sm.HasFilled
+                                        && sm.System == e.System
+                                    );
+                            }
+
+                            return showTurnIn
+                                // true
+                                ? (IRoutableViewModel) ((App) Application.Current).Services
+                                .GetService<TurnInViewModel>()!
+                                : (IRoutableViewModel) ((App) Application.Current).Services
+                                .GetService<MissionStatsViewModel>()!;
+                        }
                     )
                     .Do(vm => Router.Navigate.Execute(vm))
                     .Subscribe(_ => { })
                     .DisposeWith(disposables);
             });
 
-            api.StartAsync();
+            Task.Run(() =>
+            {
+                missionCatchUp.CatchUp();
+                api.StartAsync();
+            });
         }
-
-        private record DockedLocationPair(bool IsDocked, string StationName);
-
-        private record LocationChangePair(DockedLocationPair Location,
-            IChangeSet<StationMissionsGroup, string> StationMissionInfo);
     }
-
 
     public class StationMissionsGroup : AbstractNotifyPropertyChanged, IDisposable
     {
@@ -109,20 +98,25 @@ namespace Wpf.ViewModels
         private int _missionCount;
         private bool _hasFilled;
 
-        public StationMissionsGroup(IGroup<Mission, string, string> grouping)
+        public StationMissionsGroup(IGroup<Mission, string, (string System, string Station)> grouping)
         {
-            Station = grouping.Key;
+            System = grouping.Key.System;
+            Station = grouping.Key.Station;
             var missionCountSetter =
                 grouping.Cache.CountChanged
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Subscribe(count => MissionCount = count);
-            var test =
+            var hasFilledSetter =
                 grouping.Cache.Connect()
-                    .Select(cs => cs.Any(x => x.Current.IsFilled))
                     .ObserveOn(RxApp.MainThreadScheduler)
+                    .Bind(out var missions)
+                    .Select(_ =>
+                    {
+                        return missions.Any(m => m.IsFilled);
+                    })
                     .Subscribe(hasFilled => HasFilled = hasFilled);
 
-            _cleanup = new CompositeDisposable(missionCountSetter, test);
+            _cleanup = new CompositeDisposable(missionCountSetter, hasFilledSetter);
         }
 
         public int MissionCount
@@ -138,6 +132,7 @@ namespace Wpf.ViewModels
         }
 
         public string Station { get; }
+        public string System { get; }
 
         public void Dispose()
         {

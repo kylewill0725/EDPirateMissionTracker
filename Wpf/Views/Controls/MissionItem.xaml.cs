@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Common;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace Wpf.Views
 {
@@ -58,21 +59,9 @@ namespace Wpf.Views
                         reward => $"{reward:C0}")
                     .DisposeWith(disposables);
 
-                // Progress
-                this.OneWayBind(ViewModel,
-                        vm => vm.Progress,
-                        view => view.Progress.Text)
-                    .DisposeWith(disposables);
-
-                // Expire text
-                this.OneWayBind(ViewModel,
-                        vm => vm.ExpiresIn,
-                        view => view.Expiration.Text)
-                    .DisposeWith(disposables);
-
                 // Docked highlighting
                 this.OneWayBind(ViewModel,
-                        vm => vm.IsDockedAtMissionStation,
+                        vm => vm.ShouldHighlight,
                         view => view.Grid.Background,
                         isDocked => isDocked ? greenBrush : whiteBrush)
                     .DisposeWith(disposables);
@@ -83,36 +72,33 @@ namespace Wpf.Views
     public class MissionItemViewModel : ReactiveObject
     {
         public Mission Mission { get; }
-
-        private readonly ObservableAsPropertyHelper<bool> _isDockedAtMissionStation;
-        public bool IsDockedAtMissionStation => _isDockedAtMissionStation.Value;
-
-        private readonly ObservableAsPropertyHelper<string> _expiresIn;
-        public string ExpiresIn => _expiresIn.Value;
+        public bool ShouldHighlight { [ObservableAsProperty] get; }
+        public string ExpiresIn { [ObservableAsProperty] get; }
         public string Progress => $"{(Mission.IsFilled ? "Done " : "")}{Mission.CurrentKills} / {Mission.TotalKills}";
 
         public MissionItemViewModel(Mission mission, StateTracker state)
         {
-            var stationObservable = state.Station;
+            var stationObservable = state.Location;
             Mission = mission;
-            _isDockedAtMissionStation =
-                stationObservable
-                    .Select(station => Mission.IsFilled && station == Mission.Station)
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .ToProperty(this, x => x.IsDockedAtMissionStation);
+            stationObservable
+                .Select(location => Mission.IsFilled 
+                                    && (location.IsDocked 
+                                        ? location.Station == mission.Station 
+                                        : location.System == mission.System))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToPropertyEx(this, x => x.ShouldHighlight);
 
-            _expiresIn =
-                Observable.Return(1L).Merge(
-                        Observable.Interval(TimeSpan.FromSeconds(10))
-                    )
-                    .Select(_ =>
-                    {
-                        Mission.Expiry.Subtract(TimeSpan.Zero);
-                        return mission.Expiry - DateTime.UtcNow;
-                    })
-                    .Select(time => $"Expires in: {time.Days}D {time.Hours}H {time.Minutes}M")
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .ToProperty(this, x => x.ExpiresIn);
+            Observable.Return(1L).Merge(
+                    Observable.Interval(TimeSpan.FromSeconds(10))
+                )
+                .Select(_ =>
+                {
+                    Mission.Expiry.Subtract(TimeSpan.Zero);
+                    return mission.Expiry - DateTime.UtcNow;
+                })
+                .Select(time => $"Expires in: {time.Days}D {time.Hours}H {time.Minutes}M")
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToPropertyEx(this, x => x.ExpiresIn);
         }
     }
 }

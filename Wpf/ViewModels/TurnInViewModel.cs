@@ -20,9 +20,10 @@ namespace Wpf.ViewModels
         public TurnInViewModel(IScreen hostScreen, MissionTargetManager missionTargetManager, StateTracker state)
         {
             HostScreen = hostScreen;
-            var comparer = SortExpressionComparer<Mission>.Descending(m => m.IsWing).ThenByDescending(m => m.IsFilled).ThenByDescending(m => m.MissionId);
+            var comparer = SortExpressionComparer<Mission>.Descending(m => m.IsWing).ThenByDescending(m => m.MissionId);
             missionTargetManager
                 .Connect()
+                .Filter(x => x.IsFilled)
                 .Sort(comparer)
                 .Transform(m => new MissionItemViewModel(m, state))
                 .ObserveOn(RxApp.MainThreadScheduler)
