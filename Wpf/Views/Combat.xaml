@@ -10,6 +10,11 @@
     xmlns:controls="clr-namespace:Wpf.Views.Controls"
     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="3*" />
@@ -24,10 +29,34 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Faction" DisplayMemberBinding="{Binding Path=Name}" />
-                    <GridViewColumn Header="Mission 1"  DisplayMemberBinding="{Binding Path=Mission1Remaining}" />
-                    <GridViewColumn Header="Mission 2"  DisplayMemberBinding="{Binding Path=Mission2Remaining}"/>
-                    <GridViewColumn Header="Mission 3"  DisplayMemberBinding="{Binding Path=Mission3Remaining}"/>
-                    <GridViewColumn Header="Mission 4"  DisplayMemberBinding="{Binding Path=Mission4Remaining}"/>
+                    <GridViewColumn Header="Mission 1">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="One" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Mission 2">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="Two" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Mission 3">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="Three" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Mission 4">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="Four" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn Header="Kill Total"  DisplayMemberBinding="{Binding Path=KillsRemaining}"/>
                 </GridView>
             </ListView.View>

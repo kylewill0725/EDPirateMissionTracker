@@ -47,7 +47,7 @@ namespace Wpf.ViewModels
                 .Select(x => x.Select(f => f.KillsRemaining).Append(0).Max())
                 .ToPropertyEx(this, x => x.StackHeight);
             factionChanges
-                .Select(x => x.Count(y => y.KillsRemaining > 0))
+                .Select(x => x.Count(y => y.Mission1Reward != 0))
                 .ToPropertyEx(this, x => x.StackWidth);
             factionChanges
                 .Select(x => x.Select(y => y.MissionCount).Sum())
@@ -130,24 +130,45 @@ namespace Wpf.ViewModels
             kcChanges
                 .Select(x => x.Sum(i => Math.Max(i.Remaining, 0)))
                 .ToPropertyEx(this, x => x.KillsRemaining);
-            kcChanges
-                .Select(x => x.FirstOrDefault(y => !y.IsFilled)?.Remaining ?? 0)
+            
+            var mission1Data =
+                kcChanges
+                    .Select(x => x.FirstOrDefault(y => !y.IsFilled))
+                    .Where(x => x != null);
+            mission1Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission1Remaining);
-            kcChanges
-                .Select(x => x.FirstOrDefault(y => !y.IsFilled)?.Reward ?? 0)
+            mission1Data.Select(x => x.Reward)
                 .ToPropertyEx(this, x => x.Mission1Reward);
-            kcChanges
-                .Select(x => x.FirstOrDefault(y => !y.IsFilled)?.Total ?? 0)
+            mission1Data.Select(x => x.Total)
                 .ToPropertyEx(this, x => x.Mission1TotalKills);
-            kcChanges
-                .Select(x => x.Where(y => !y.IsFilled).Skip(1).FirstOrDefault()?.Remaining ?? 0)
+            
+            var mission2Data =
+                kcChanges
+                    .Select(x => x.Where(y => !y.IsFilled).Skip(1).FirstOrDefault())
+                    .Where(x => x != null);
+            mission2Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission2Remaining);
-            kcChanges
-                .Select(x => x.Where(y => !y.IsFilled).Skip(2).FirstOrDefault()?.Remaining ?? 0)
+            mission2Data.Select(x => x.Reward)
+                .ToPropertyEx(this, x => x.Mission2Reward);
+            
+            var mission3Data =
+                kcChanges
+                    .Select(x => x.Where(y => !y.IsFilled).Skip(2).FirstOrDefault())
+                    .Where(x => x != null);
+            mission3Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission3Remaining);
-            kcChanges
-                .Select(x => x.Where(y => !y.IsFilled).Skip(3).FirstOrDefault()?.Remaining ?? 0)
+            mission3Data.Select(x => x.Reward)
+                .ToPropertyEx(this, x => x.Mission3Reward);
+            
+            var mission4Data =
+                kcChanges
+                    .Select(x => x.Where(y => !y.IsFilled).Skip(3).FirstOrDefault())
+                    .Where(x => x != null);
+            mission4Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission4Remaining);
+            mission4Data.Select(x => x.Reward)
+                .ToPropertyEx(this, x => x.Mission4Reward);
+            
             kcChanges
                 .Select(x => x.Sum(i => i.Reward))
                 .ToPropertyEx(this, x => x.RewardTotal);
@@ -155,13 +176,16 @@ namespace Wpf.ViewModels
         }
 
         public int Mission4Remaining { [ObservableAsProperty] get; }
+        public long Mission4Reward { [ObservableAsProperty] get; }
 
         public string Name { get; }
         public long Mission1Reward { [ObservableAsProperty] get; }
         public int Mission1Remaining { [ObservableAsProperty] get; }
         public int Mission1TotalKills { [ObservableAsProperty] get; }
         public int Mission2Remaining { [ObservableAsProperty] get; }
+        public long Mission2Reward { [ObservableAsProperty] get; }
         public int Mission3Remaining { [ObservableAsProperty] get; }
+        public long Mission3Reward { [ObservableAsProperty] get; }
         public int KillsRemaining { [ObservableAsProperty] get; }
         public int MissionCount { [ObservableAsProperty] get; }
         public int MissionsDoneCount { [ObservableAsProperty] get; }
