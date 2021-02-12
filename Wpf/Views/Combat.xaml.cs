@@ -1,7 +1,9 @@
 ﻿
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Windows.Data;
 using ReactiveUI;
 
@@ -19,6 +21,18 @@ namespace Wpf.Views
                     vm => vm.Factions,
                     view => view.FactionList.ItemsSource
                 ).DisposeWith(disposable);
+
+                ViewModel.WhenAnyValue(x => x.Factions)
+                    .Take(1)
+                    .Subscribe(_ =>
+                    {
+                        var columnBinding = KillTotalColumn.DisplayMemberBinding as Binding;
+                        var sortBy = columnBinding?.Path.Path ?? KillTotalColumn.Header as string;
+                        Sort(sortBy, ListSortDirection.Ascending);
+                    }).DisposeWith(disposable);
+
+                ViewModel.WhenAnyValue(x => x.Factions)
+                    .Subscribe(_ => SimpleSort()).DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,
                     vm => vm.StackHeight,
@@ -70,6 +84,24 @@ namespace Wpf.Views
                 ).DisposeWith(disposable);
 
             });
+        }
+
+        private void Sort(string sortBy, ListSortDirection direction)
+        {
+            ICollectionView dataView =
+              CollectionViewSource.GetDefaultView(FactionList.ItemsSource);
+
+            dataView.SortDescriptions.Clear();
+            SortDescription sd = new SortDescription(sortBy, direction);
+            dataView.SortDescriptions.Add(sd);
+            dataView.Refresh();
+        }
+
+        private void SimpleSort()
+        {
+            ICollectionView dataView =
+                CollectionViewSource.GetDefaultView(FactionList.ItemsSource);
+            dataView.Refresh();
         }
     }
 

@@ -59,7 +59,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Kill Total"  DisplayMemberBinding="{Binding Path=KillsRemaining}"/>
+                    <GridViewColumn x:Name="KillTotalColumn" Header="Kill Total"  DisplayMemberBinding="{Binding Path=KillsRemaining}"/>
                 </GridView>
             </ListView.View>
         </ListView>
