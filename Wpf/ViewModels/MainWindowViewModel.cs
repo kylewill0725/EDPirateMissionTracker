@@ -47,11 +47,13 @@ namespace Wpf.ViewModels
                         .Bind(out var stationMissions)
                         .DisposeMany();
 
-                tracker.Location
-                    .CombineLatest(filledMissionCountChanged, (dockedLocation, _) => dockedLocation)
+                api.Events().OnStart
+                    .Select(_ => new LocationUpdate(false, "", ""))
+                    .Merge(tracker.Location)
+                    .CombineLatest(filledMissionCountChanged.Select(_ => 0).Prepend(0), (dockedLocation, _) => dockedLocation)
                     .CombineLatest(api.Events().OnCatchedUp.Delay(TimeSpan.FromMilliseconds(50)),
                         (location, _) => location)
-                    .Where(_ => DoneLoading)
+                    // .Where(_ => DoneLoading)
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Select(e =>
                         {
