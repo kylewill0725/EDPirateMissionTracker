@@ -11,5 +11,8 @@ No manual input is needed.
 It scans your game logs the same way programs like EDDiscovery do. By tracking mission accepts, redirects, completes,
 and bounty events, it keeps an updated list of active missions and their approximate kill count.  
 
+### Limitations
+Currently it only works against a pirate faction. If your target is something else, let me know and I'll see what I can do.
+
 ## Other questions?
 Feel free to create an issue for any questions or suggestions and I'll answer as soon I can.
