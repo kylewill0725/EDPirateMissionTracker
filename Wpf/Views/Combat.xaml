@@ -17,17 +17,44 @@
         </Style>
         <views:MissionRewardConverter x:Key="MissionRewardConverter" />
     </UserControl.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="2*" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*" />
-            <ColumnDefinition Width="1*" />
-            <ColumnDefinition Width="1*" />
-        </Grid.ColumnDefinitions>
-        <ListView x:Name="FactionList" Grid.ColumnSpan="3">
+    <DockPanel LastChildFill="True">
+        <!-- <Grid DockPanel.Dock="Bottom"> -->
+        <!--     <Grid.ColumnDefinitions> -->
+        <!--         <ColumnDefinition Width="*" /> -->
+        <!--         <ColumnDefinition Width="*" /> -->
+        <!--         <ColumnDefinition Width="*" /> -->
+        <!--         <ColumnDefinition Width="*" /> -->
+        <!--     </Grid.ColumnDefinitions> -->
+        <!--     <StackPanel > -->
+        <!--         <controls:DataWithLabel x:Name="StackHeight" Label="StackHeight: " /> -->
+        <!--         <controls:DataWithLabel x:Name="StackWidth" Label="Stack Width: " /> -->
+        <!--     </StackPanel> -->
+        <!--     <StackPanel Grid.Column="1"> -->
+        <!--         <controls:DataWithLabel x:Name="MissionCount" Label="Total Mission Count: " /> -->
+        <!--         <controls:DataWithLabel x:Name="MissionsDone" Label="Finished Mission Count: " /> -->
+        <!--     </StackPanel> -->
+        <!--     <StackPanel Grid.Column="2"> -->
+        <!--         <controls:DataWithLabel x:Name="TotalKills" Label="Total Kills: " /> -->
+        <!--         <controls:DataWithLabel x:Name="Ratio" Label="Ratio: " /> -->
+        <!--         <controls:DataWithLabel x:Name="TotalPayout" Label="Total Payout: " /> -->
+        <!--     </StackPanel> -->
+        <!--     <StackPanel Grid.Column="3"> -->
+        <!--         <controls:DataWithLabel x:Name="MissionAverage" Label="Mission Average: " /> -->
+        <!--         <controls:DataWithLabel x:Name="MillPerKill" Label="Reward Per Kill: " /> -->
+        <!--     </StackPanel> -->
+        <!-- </Grid> -->
+        <StackPanel DockPanel.Dock="Right" Margin="5, 0">
+            <controls:DataWithLabel x:Name="StackHeight" Label="StackHeight: " />
+            <controls:DataWithLabel x:Name="StackWidth" Label="Stack Width: " />
+            <controls:DataWithLabel x:Name="MissionCount" Label="Total Mission Count: " />
+            <controls:DataWithLabel x:Name="MissionsDone" Label="Finished Mission Count: " />
+            <controls:DataWithLabel x:Name="TotalKills" Label="Total Kills: " />
+            <controls:DataWithLabel x:Name="Ratio" Label="Ratio: " />
+            <controls:DataWithLabel x:Name="TotalPayout" Label="Total Payout: " />
+            <controls:DataWithLabel x:Name="MissionAverage" Label="Mission Average: " />
+            <controls:DataWithLabel x:Name="MillPerKill" Label="Reward Per Kill: " />
+        </StackPanel>
+        <ListView x:Name="FactionList" DockPanel.Dock="Left">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Faction" DisplayMemberBinding="{Binding Path=Name}" />
@@ -63,21 +90,5 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <StackPanel Grid.Row="1">
-            <controls:DataWithLabel x:Name="StackHeight" Label="StackHeight: " />
-            <controls:DataWithLabel x:Name="StackWidth" Label="Stack Width: " />
-            <controls:DataWithLabel x:Name="MissionCount" Label="Total Mission Count: " />
-            <controls:DataWithLabel x:Name="MissionsDone" Label="Finished Mission Count: " />
-        </StackPanel>
-        <StackPanel Grid.Row="1" Grid.Column="1">
-            <controls:DataWithLabel x:Name="TotalKills" Label="Total Kills: " />
-            <controls:DataWithLabel x:Name="Ratio" Label="Ratio: " />
-            <controls:DataWithLabel x:Name="TotalPayout" Label="Total Payout: " />
-            <controls:DataWithLabel x:Name="MissionAverage" Label="Mission Average: " />
-            <controls:DataWithLabel x:Name="MillPerKill" Label="Reward Per Kill: " />
-        </StackPanel>
-        <StackPanel Grid.Row="1" Grid.Column="2">
-            
-        </StackPanel>
-    </Grid>
+    </DockPanel>
 </reactiveUi:ReactiveUserControl>

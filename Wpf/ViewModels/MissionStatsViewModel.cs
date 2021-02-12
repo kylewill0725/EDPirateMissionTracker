@@ -31,13 +31,13 @@ namespace Wpf.ViewModels
                     .Connect()
                     .Select(m => m)
                     .Group(m => m.Faction)
-                    .Filter(g => g.Cache.Count > 0)
+                    // .Filter(g => g.Cache.Count > 0)
                     .Transform(g => new FactionGroup(g))
-                    .Sort(factionSort)
-                    .DisposeMany();
+                    .Sort(factionSort);
             factionUpdates
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out _factions)
+                .DisposeMany()
                 .Subscribe();
 
             var factionChanges =

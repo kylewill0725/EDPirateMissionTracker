@@ -22,17 +22,17 @@ namespace Wpf.Views
                     view => view.FactionList.ItemsSource
                 ).DisposeWith(disposable);
 
-                ViewModel.WhenAnyValue(x => x.Factions)
-                    .Take(1)
-                    .Subscribe(_ =>
-                    {
-                        var columnBinding = KillTotalColumn.DisplayMemberBinding as Binding;
-                        var sortBy = columnBinding?.Path.Path ?? KillTotalColumn.Header as string;
-                        Sort(sortBy, ListSortDirection.Ascending);
-                    }).DisposeWith(disposable);
+                // ViewModel.WhenAnyValue(x => x.Factions)
+                //     .Take(1)
+                //     .Subscribe(_ =>
+                //     {
+                //         var columnBinding = KillTotalColumn.DisplayMemberBinding as Binding;
+                //         var sortBy = columnBinding?.Path.Path ?? KillTotalColumn.Header as string;
+                //         Sort(sortBy, ListSortDirection.Ascending);
+                //     }).DisposeWith(disposable);
 
-                ViewModel.WhenAnyValue(x => x.Factions)
-                    .Subscribe(_ => SimpleSort()).DisposeWith(disposable);
+                // ViewModel.WhenAnyValue(x => x.Factions)
+                //     .Subscribe(_ => SimpleSort()).DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,
                     vm => vm.StackHeight,
