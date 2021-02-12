@@ -25,6 +25,7 @@ namespace Wpf.ViewModels
         {
             HostScreen = host;
 
+            var factionSort = SortExpressionComparer<FactionGroup>.Descending(f => f.KillsRemaining);
             var factionUpdates =
                 missionTargetManager
                     .Connect()
@@ -32,6 +33,7 @@ namespace Wpf.ViewModels
                     .Group(m => m.Faction)
                     .Filter(g => g.Cache.Count > 0)
                     .Transform(g => new FactionGroup(g))
+                    .Sort(factionSort)
                     .DisposeMany();
             factionUpdates
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -130,45 +132,57 @@ namespace Wpf.ViewModels
             kcChanges
                 .Select(x => x.Sum(i => Math.Max(i.Remaining, 0)))
                 .ToPropertyEx(this, x => x.KillsRemaining);
-            
+
             var mission1Data =
                 kcChanges
-                    .Select(x => x.FirstOrDefault(y => !y.IsFilled))
-                    .Where(x => x != null);
+                    .Select(x => x.FirstOrDefault(y => !y.IsFilled) ?? new KillValuePair(0, 0, 0, true));
             mission1Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission1Remaining);
             mission1Data.Select(x => x.Reward)
                 .ToPropertyEx(this, x => x.Mission1Reward);
             mission1Data.Select(x => x.Total)
                 .ToPropertyEx(this, x => x.Mission1TotalKills);
-            
+            this.WhenChanged(x => x.Mission1Remaining, x => x.Mission1Reward,
+                    (_, remaining, reward) => $"{remaining}\n{reward / 1_000_000:C0}")
+                .ToPropertyEx(this, x => x.Mission1RemainingAndRewardText);
+
+
             var mission2Data =
                 kcChanges
-                    .Select(x => x.Where(y => !y.IsFilled).Skip(1).FirstOrDefault())
-                    .Where(x => x != null);
+                    .Select(x =>
+                        x.Where(y => !y.IsFilled).Skip(1).FirstOrDefault() ?? new KillValuePair(0, 0, 0, true));
             mission2Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission2Remaining);
             mission2Data.Select(x => x.Reward)
                 .ToPropertyEx(this, x => x.Mission2Reward);
-            
+            this.WhenChanged(x => x.Mission2Remaining, x => x.Mission2Reward,
+                    (_, remaining, reward) => $"{remaining}\n{reward / 1_000_000:C0}")
+                .ToPropertyEx(this, x => x.Mission2RemainingAndRewardText);
+
             var mission3Data =
                 kcChanges
-                    .Select(x => x.Where(y => !y.IsFilled).Skip(2).FirstOrDefault())
-                    .Where(x => x != null);
+                    .Select(x =>
+                        x.Where(y => !y.IsFilled).Skip(2).FirstOrDefault() ?? new KillValuePair(0, 0, 0, true));
             mission3Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission3Remaining);
             mission3Data.Select(x => x.Reward)
                 .ToPropertyEx(this, x => x.Mission3Reward);
-            
+            this.WhenChanged(x => x.Mission3Remaining, x => x.Mission3Reward,
+                    (_, remaining, reward) => $"{remaining}\n{reward / 1_000_000:C0}")
+                .ToPropertyEx(this, x => x.Mission3RemainingAndRewardText);
+
             var mission4Data =
                 kcChanges
-                    .Select(x => x.Where(y => !y.IsFilled).Skip(3).FirstOrDefault())
-                    .Where(x => x != null);
+                    .Select(x =>
+                        x.Where(y => !y.IsFilled).Skip(3).FirstOrDefault() ?? new KillValuePair(0, 0, 0, true));
             mission4Data.Select(x => x.Remaining)
                 .ToPropertyEx(this, x => x.Mission4Remaining);
             mission4Data.Select(x => x.Reward)
                 .ToPropertyEx(this, x => x.Mission4Reward);
-            
+            this.WhenChanged(x => x.Mission4Remaining, x => x.Mission4Reward,
+                    (_, remaining, reward) => $"{remaining}\n{reward / 1_000_000:C0}")
+                .ToPropertyEx(this, x => x.Mission4RemainingAndRewardText);
+
             kcChanges
                 .Select(x => x.Sum(i => i.Reward))
                 .ToPropertyEx(this, x => x.RewardTotal);
@@ -177,15 +191,19 @@ namespace Wpf.ViewModels
 
         public int Mission4Remaining { [ObservableAsProperty] get; }
         public long Mission4Reward { [ObservableAsProperty] get; }
+        public string Mission4RemainingAndRewardText { [ObservableAsProperty] get; }
 
         public string Name { get; }
         public long Mission1Reward { [ObservableAsProperty] get; }
         public int Mission1Remaining { [ObservableAsProperty] get; }
         public int Mission1TotalKills { [ObservableAsProperty] get; }
+        public string Mission1RemainingAndRewardText { [ObservableAsProperty] get; }
         public int Mission2Remaining { [ObservableAsProperty] get; }
         public long Mission2Reward { [ObservableAsProperty] get; }
+        public string Mission2RemainingAndRewardText { [ObservableAsProperty] get; }
         public int Mission3Remaining { [ObservableAsProperty] get; }
         public long Mission3Reward { [ObservableAsProperty] get; }
+        public string Mission3RemainingAndRewardText { [ObservableAsProperty] get; }
         public int KillsRemaining { [ObservableAsProperty] get; }
         public int MissionCount { [ObservableAsProperty] get; }
         public int MissionsDoneCount { [ObservableAsProperty] get; }

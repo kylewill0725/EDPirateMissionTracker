@@ -42,34 +42,23 @@ namespace Wpf.ViewModels
                 var filledMissionCountChanged =
                     missionTargetManager
                         .Connect()
-                        .Group(mission => (mission.System, mission.Station))
-                        .Transform(g => new StationMissionsGroup(g))
-                        .DisposeMany()
+                        .Where(m => m.IsFilled)
                         .ObserveOn(RxApp.MainThreadScheduler)
-                        .Bind(out var stationMissions);
+                        .Bind(out var stationMissions)
+                        .DisposeMany();
 
                 tracker.Location
-                    .CombineLatest(filledMissionCountChanged.WhenPropertyChanged(x => x.MissionCount), (dockedLocation, _) => dockedLocation)
-                    .CombineLatest(api.Events().OnCatchedUp.Delay(TimeSpan.FromMilliseconds(50)), (location, _) => location)
+                    .CombineLatest(filledMissionCountChanged, (dockedLocation, _) => dockedLocation)
+                    .CombineLatest(api.Events().OnCatchedUp.Delay(TimeSpan.FromMilliseconds(50)),
+                        (location, _) => location)
                     .Where(_ => DoneLoading)
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Select(e =>
                         {
-                            bool showTurnIn;
-                            if (e.IsDocked)
-                            {
-                                showTurnIn = stationMissions.Any(sm =>
-                                    sm.HasFilled
-                                    && sm.Station == e.Station);
-                            }
-                            else
-                            {
-                                showTurnIn =
-                                    stationMissions.Any(sm =>
-                                        sm.HasFilled
-                                        && sm.System == e.System
-                                    );
-                            }
+                            var showTurnIn = 
+                                e.IsDocked 
+                                    ? stationMissions.Any(m => m.Station == e.Station) 
+                                    : stationMissions.Any(m => m.System == e.System);
 
                             return showTurnIn
                                 // true
@@ -89,54 +78,6 @@ namespace Wpf.ViewModels
                 missionCatchUp.CatchUp();
                 api.StartAsync();
             });
-        }
-    }
-
-    public class StationMissionsGroup : AbstractNotifyPropertyChanged, IDisposable
-    {
-        private IDisposable _cleanup;
-        private int _missionCount;
-        private bool _hasFilled;
-
-        public StationMissionsGroup(IGroup<Mission, string, (string System, string Station)> grouping)
-        {
-            System = grouping.Key.System;
-            Station = grouping.Key.Station;
-            var missionCountSetter =
-                grouping.Cache.CountChanged
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .Subscribe(count => MissionCount = count);
-            var hasFilledSetter =
-                grouping.Cache.Connect()
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .Bind(out var missions)
-                    .Select(_ =>
-                    {
-                        return missions.Any(m => m.IsFilled);
-                    })
-                    .Subscribe(hasFilled => HasFilled = hasFilled);
-
-            _cleanup = new CompositeDisposable(missionCountSetter, hasFilledSetter);
-        }
-
-        public int MissionCount
-        {
-            get => _missionCount;
-            private set => SetAndRaise(ref _missionCount, value);
-        }
-
-        public bool HasFilled
-        {
-            get => _hasFilled;
-            private set => SetAndRaise(ref _hasFilled, value);
-        }
-
-        public string Station { get; }
-        public string System { get; }
-
-        public void Dispose()
-        {
-            _cleanup.Dispose();
         }
     }
 }

@@ -8,12 +8,14 @@
     xmlns:reactiveUi="http://reactiveui.net"
     xmlns:viewModels="clr-namespace:Wpf.ViewModels"
     xmlns:controls="clr-namespace:Wpf.Views.Controls"
+    xmlns:views="clr-namespace:Wpf.Views"
     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <Style TargetType="ListViewItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         </Style>
+        <views:MissionRewardConverter x:Key="MissionRewardConverter" />
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -32,28 +34,28 @@
                     <GridViewColumn Header="Mission 1">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="One" />
+                                <TextBlock Text="{Binding Path=Mission1RemainingAndRewardText}" TextAlignment="Right" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Mission 2">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="Two" />
+                                <TextBlock Text="{Binding Path=Mission2RemainingAndRewardText}" TextAlignment="Right" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Mission 3">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="Three" />
+                                <TextBlock Text="{Binding Path=Mission3RemainingAndRewardText}" TextAlignment="Right" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Mission 4">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <controls:MissionRemainingAndReward Mission="{Binding}" MissionIndex="Four" />
+                                <TextBlock Text="{Binding Path=Mission4RemainingAndRewardText}" TextAlignment="Right" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

@@ -1,5 +1,8 @@
 ﻿
+using System;
+using System.Globalization;
 using System.Reactive.Disposables;
+using System.Windows.Data;
 using ReactiveUI;
 
 namespace Wpf.Views
@@ -67,6 +70,19 @@ namespace Wpf.Views
                 ).DisposeWith(disposable);
 
             });
+        }
+    }
+
+    public class MissionRewardConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (long) value / 1_000_000;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }
