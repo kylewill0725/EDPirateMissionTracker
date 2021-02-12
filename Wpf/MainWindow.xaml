@@ -9,7 +9,7 @@
         xmlns:reactiveUi="http://reactiveui.net"
         xmlns:viewModels="clr-namespace:Wpf.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow - v1.2.3" Height="450" Width="800"
+        Title="MainWindow - v1.2.4" Height="450" Width="650"
         Topmost="True"
         >
     <Grid MouseUp="UIElement_OnMouseUp">
