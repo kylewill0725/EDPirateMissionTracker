@@ -1,24 +1,23 @@
-﻿namespace EliteSharp.Journal.Processor.Abstractions
+﻿using EliteSharp.Event.Models.Abstractions;
+
+namespace EliteSharp.Journal.Processor.Abstractions
 {
     /// <summary>
     ///     A journal entry
     /// </summary>
     public class JournalEntry
     {
-        public JournalEntry(string json, bool isWhileCatchingUp)
+        public JournalEntry(EventBase e, bool isWhileCatchingUp)
         {
-            Json = json;
+            Event = e;
             IsWhileCatchingUp = isWhileCatchingUp;
         }
-
-        /// <summary>
-        ///     This entry's Json event
-        /// </summary>
-        public string Json { get; }
 
         /// <summary>
         ///     Whether this entry was ran before EliteAPI was started
         /// </summary>
         public bool IsWhileCatchingUp { get; }
+
+        public EventBase Event { get; }
     }
 }

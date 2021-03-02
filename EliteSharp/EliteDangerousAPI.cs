@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using EliteSharp.Abstractions;
 using EliteSharp.Event.Handler;
+using EliteSharp.Event.Models.Abstractions;
 using EliteSharp.Event.Processor.Abstractions;
 using EliteSharp.Event.Provider.Abstractions;
 using EliteSharp.Journal.Directory.Abstractions;
@@ -33,6 +35,7 @@ namespace EliteSharp
         private readonly ILogger<EliteDangerousAPI> _log;
         private readonly IStatusProcessor _statusProcessor;
         private readonly IStatusProvider _statusProvider;
+        private IReadOnlyList<StartingJournalDetector> _firstJournalDetectors;
 
         /// <summary>
         /// Creates a new EliteDangerousAPI class
@@ -66,8 +69,8 @@ namespace EliteSharp
         private FileInfo OutfittingFile { get; set; }
         private FileInfo ShipyardFile { get; set; }
 
-        private Exception PreInitializationException { get; }
-        private Exception InitializationException { get; set; }
+        private Exception? PreInitializationException { get; }
+        private Exception? InitializationException { get; set; }
 
         private bool IsInitialized { get; set; }
 
@@ -170,7 +173,7 @@ namespace EliteSharp
                 await _statusProcessor.ProcessShipyardFile(ShipyardFile);
 
                 await SetJournalFile();
-                await _journalProcessor.ProcessJournalFile(JournalFile, !HasCatchedUp);
+                HasCatchedUp = await _journalProcessor.ProcessJournalFile(JournalFile, !HasCatchedUp);
 
                 if (!HasCatchedUp)
                 {
@@ -202,9 +205,8 @@ namespace EliteSharp
         {
             try
             {
-                var eventBase = await _eventProvider.ProcessJsonEvent(e.Json);
                 foreach (var eventProcessor in _eventProcessors)
-                    await eventProcessor.InvokeHandler(eventBase, e.IsWhileCatchingUp);
+                    await eventProcessor.InvokeHandler(e.Event, e.IsWhileCatchingUp);
             }
             catch (Exception ex)
             {
@@ -228,6 +230,14 @@ namespace EliteSharp
                 throw;
             }
         }
+
+        private async Task InitializeJournalFile()
+        {
+            
+        }
+
+        private bool IsStartingJournalFile(EventBase e) => 
+            _firstJournalDetectors.All(detector => detector.Invoke(e));
 
         private async Task SetJournalFile()
         {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using EliteSharp.Event.Models.Abstractions;
+using EliteSharp.Event.Provider.Abstractions;
 using EliteSharp.Journal.Processor.Abstractions;
 
 namespace EliteSharp.Journal.Processor
@@ -11,17 +13,19 @@ namespace EliteSharp.Journal.Processor
     public class JournalProcessor : IJournalProcessor
     {
         private readonly IDictionary<FileInfo, IList<string>> _cache;
+        private IEventProvider _eventProvider;
 
-        public JournalProcessor()
+        public JournalProcessor(IEventProvider provider)
         {
             _cache = new Dictionary<FileInfo, IList<string>>();
+            _eventProvider = provider;
         }
 
         /// <inheritdoc />
-        public event EventHandler<JournalEntry> NewJournalEntry;
+        public event EventHandler<JournalEntry>? NewJournalEntry;
 
         /// <inheritdoc />
-        public Task ProcessJournalFile(FileInfo journalFile, bool isWhileCatchingUp)
+        public async Task<bool> ProcessJournalFile(FileInfo journalFile, bool isWhileCatchingUp)
         {
             var journalContent = ReadAllLines(journalFile);
             foreach (var entry in journalContent)
@@ -29,11 +33,13 @@ namespace EliteSharp.Journal.Processor
                 if (IsInCache(journalFile, entry)) continue;
 
                 AddToCache(journalFile, entry);
+                
 
-                NewJournalEntry?.Invoke(this, new JournalEntry(entry, isWhileCatchingUp));
+                var eventBase = await _eventProvider.ProcessJsonEvent(entry);
+                NewJournalEntry?.Invoke(this, new JournalEntry(eventBase, isWhileCatchingUp));
             }
 
-            return Task.CompletedTask;
+            return true;
         }
 
         private void AddToCache(FileInfo file, string content)
@@ -54,7 +60,7 @@ namespace EliteSharp.Journal.Processor
             using (var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 0x1000,
                 FileOptions.RandomAccess))
             using (var stream = new StreamReader(fs, Encoding.UTF8)) {
-                string line;
+                string? line;
                 while ((line = stream.ReadLine()) != null) yield return line;
             }
         }

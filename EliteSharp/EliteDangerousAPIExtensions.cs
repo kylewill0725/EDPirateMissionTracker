@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using EliteSharp.Abstractions;
 using EliteSharp.Event.Handler;
+using EliteSharp.Event.Models.Abstractions;
 using EliteSharp.Event.Module;
 using EliteSharp.Event.Processor;
 using EliteSharp.Event.Processor.Abstractions;
@@ -31,6 +32,7 @@ namespace EliteSharp
         public static IServiceCollection AddEliteAPI(this IServiceCollection services,
             Action<EliteDangerousAPIConfiguration> configuration = null)
         {
+            services.AddTransient<EliteDangerousApiServices>();
             services.AddSingleton<IEliteDangerousAPI, EliteDangerousAPI>();
 
             services.AddSingleton<IEventProvider, EventProvider>();
@@ -57,6 +59,7 @@ namespace EliteSharp
     {
         private readonly IList<Type> eventModuleImplementations;
         private IList<Type> _eventProcessors;
+        private IList<StartingJournalDetector> _startingJournalPredicates;
 
         internal EliteDangerousAPIConfiguration()
         {
@@ -67,6 +70,16 @@ namespace EliteSharp
                 typeof(AttributeEventProcessor),
                 typeof(AllEventProcessor)
             };
+
+            _startingJournalPredicates = new List<StartingJournalDetector>
+            {
+                new StartingJournalDetector(_ => true)
+            };
+        }
+
+        public void AddStartingJournalPredicate(Func<EventBase, bool> predicate)
+        {
+            _startingJournalPredicates.Add(new StartingJournalDetector(predicate));
         }
 
         /// <summary>
@@ -101,6 +114,29 @@ namespace EliteSharp
 
             foreach (var implementation in _eventProcessors)
                 services.AddSingleton(typeof(IEventProcessor), implementation);
+            
+            
+        }
+    }
+
+    internal class StartingJournalDetector
+    {
+        private readonly Func<EventBase, bool> _predicate;
+        private bool _isFound;
+
+        public StartingJournalDetector(Func<EventBase, bool> predicate)
+        {
+            _predicate = predicate;
+        }
+
+        public bool Invoke(EventBase e)
+        {
+            if (!_isFound && _predicate(e))
+            {
+                _isFound = true;
+            }
+
+            return _isFound;
         }
     }
 }

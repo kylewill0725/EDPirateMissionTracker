@@ -18,6 +18,6 @@ namespace EliteSharp.Journal.Processor.Abstractions
         ///     Hooks the specified journal file to <see cref="NewJournalEntry" /> and invokes <see cref="NewJournalEntry" /> when
         ///     needed
         /// </summary>
-        Task ProcessJournalFile(FileInfo journalFile, bool isWhileCatchingUp);
+        Task<bool> ProcessJournalFile(FileInfo journalFile, bool isWhileCatchingUp);
     }
 }
