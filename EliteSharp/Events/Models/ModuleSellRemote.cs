@@ -4,11 +4,6 @@ namespace EliteSharp.Events.Models
 {
     public class ModuleSellRemote : EventBase
     {
-        public enum ShipEnum
-        {
-            [DataMember(Name = "type7")] Type7
-        }
-
         [DataMember(Name = "StorageSlot")] public long StorageSlot { get; set; }
 
         [DataMember(Name = "SellItem")] public string SellItem { get; set; }
@@ -20,7 +15,7 @@ namespace EliteSharp.Events.Models
 
         [DataMember(Name = "SellPrice")] public long SellPrice { get; set; }
 
-        [DataMember(Name = "Ship")] public ShipEnum Ship { get; set; }
+        [DataMember(Name = "Ship")] public string Ship { get; set; }
 
         [DataMember(Name = "ShipID")] public long ShipId { get; set; }
     }

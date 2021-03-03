@@ -4,26 +4,6 @@ namespace EliteSharp.Events.Models
 {
     public class ShipTargeted : EventBase
     {
-        public enum LegalStatusEnum
-        {
-            [DataMember(Name = "Clean")] Clean,
-            [DataMember(Name = "Lawless")] Lawless,
-            [DataMember(Name = "Wanted")] Wanted
-        }
-
-        public enum PilotRankEnum
-        {
-            [DataMember(Name = "Competent")] Competent,
-            [DataMember(Name = "Dangerous")] Dangerous,
-            [DataMember(Name = "Deadly")] Deadly,
-            [DataMember(Name = "Elite")] Elite,
-            [DataMember(Name = "Expert")] Expert,
-            [DataMember(Name = "Harmless")] Harmless,
-            [DataMember(Name = "Master")] Master,
-            [DataMember(Name = "Mostly Harmless")] MostlyHarmless,
-            [DataMember(Name = "Novice")] Novice
-        }
-
         [DataMember(Name = "TargetLocked")] public bool TargetLocked { get; set; }
 
         [DataMember(Name = "Ship", IsRequired = false)]
@@ -42,7 +22,7 @@ namespace EliteSharp.Events.Models
         public string? PilotNameLocalised { get; set; }
 
         [DataMember(Name = "PilotRank", IsRequired = false)]
-        public PilotRankEnum? PilotRank { get; set; }
+        public string? PilotRank { get; set; }
 
         [DataMember(Name = "ShieldHealth", IsRequired = false)]
         public double? ShieldHealth { get; set; }
@@ -54,7 +34,7 @@ namespace EliteSharp.Events.Models
         public string? Faction { get; set; }
 
         [DataMember(Name = "LegalStatus", IsRequired = false)]
-        public LegalStatusEnum? LegalStatus { get; set; }
+        public string? LegalStatus { get; set; }
 
         [DataMember(Name = "Bounty", IsRequired = false)]
         public long? Bounty { get; set; }

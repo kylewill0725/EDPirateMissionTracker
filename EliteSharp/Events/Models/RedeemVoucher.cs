@@ -4,14 +4,8 @@ namespace EliteSharp.Events.Models
 {
     public class RedeemVoucher : EventBase
     {
-        public enum TypeEnum
-        {
-            [DataMember(Name = "bounty")] Bounty,
-            [DataMember(Name = "CombatBond")] CombatBond
-        }
-
         [DataMember(Name = "Type", IsRequired = false)]
-        public TypeEnum? Type { get; set; }
+        public string? Type { get; set; }
 
         [DataMember(Name = "Amount")] public long Amount { get; set; }
 

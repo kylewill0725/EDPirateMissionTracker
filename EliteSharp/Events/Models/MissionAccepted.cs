@@ -5,49 +5,6 @@ namespace EliteSharp.Events.Models
 {
     public class MissionAccepted : EventBase
     {
-        public enum InfluenceEnum
-        {
-            [DataMember(Name = "+")] Tier1,
-            [DataMember(Name = "++")] Tier2,
-            [DataMember(Name = "+++")] Tier3,
-            [DataMember(Name = "++++")] Tier4,
-            [DataMember(Name = "+++++")] Tier5,
-            [DataMember(Name = "None")] None
-        }
-
-        public enum TargetTypeEnum
-        {
-            [DataMember(Name = "$MissionUtil_FactionTag_Citizen;")]
-            MissionUtilFactionTagCitizen,
-
-            [DataMember(Name = "$MissionUtil_FactionTag_Deserter;")]
-            MissionUtilFactionTagDeserter,
-
-            [DataMember(Name = "$MissionUtil_FactionTag_Infected;")]
-            MissionUtilFactionTagInfected,
-
-            [DataMember(Name = "$MissionUtil_FactionTag_Pirate;")]
-            MissionUtilFactionTagPirate,
-
-            [DataMember(Name = "$MissionUtil_FactionTag_PirateLord;")]
-            MissionUtilFactionTagPirateLord,
-
-            [DataMember(Name = "$MissionUtil_FactionTag_Smuggler;")]
-            MissionUtilFactionTagSmuggler
-        }
-
-        public enum TargetTypeLocalisedEnum
-        {
-            [DataMember(Name = "Civilians")] Civilians,
-            [DataMember(Name = "Deserters")] Deserters,
-
-            [DataMember(Name = "Infected Vessels")]
-            InfectedVessels,
-            [DataMember(Name = "Known Pirate")] KnownPirate,
-            [DataMember(Name = "Pirates")] Pirates,
-            [DataMember(Name = "Smugglers")] Smugglers
-        }
-
         [DataMember(Name = "Faction")] public string Faction { get; set; }
 
         [DataMember(Name = "Name")] public string Name { get; set; }
@@ -55,10 +12,10 @@ namespace EliteSharp.Events.Models
         [DataMember(Name = "LocalisedName")] public string LocalisedName { get; set; }
 
         [DataMember(Name = "TargetType", IsRequired = false)]
-        public TargetTypeEnum? TargetType { get; set; }
+        public string? TargetType { get; set; }
 
         [DataMember(Name = "TargetType_Localised", IsRequired = false)]
-        public TargetTypeLocalisedEnum? TargetTypeLocalised { get; set; }
+        public string? TargetTypeLocalised { get; set; }
 
         [DataMember(Name = "TargetFaction", IsRequired = false)]
         public string? TargetFaction { get; set; }
@@ -77,9 +34,9 @@ namespace EliteSharp.Events.Models
 
         [DataMember(Name = "Wing")] public bool Wing { get; set; }
 
-        [DataMember(Name = "Influence")] public InfluenceEnum Influence { get; set; }
+        [DataMember(Name = "Influence")] public string Influence { get; set; }
 
-        [DataMember(Name = "Reputation")] public InfluenceEnum Reputation { get; set; }
+        [DataMember(Name = "Reputation")] public string Reputation { get; set; }
 
         [DataMember(Name = "Reward", IsRequired = false)]
         public long? Reward { get; set; }

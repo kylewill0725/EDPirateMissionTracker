@@ -4,14 +4,7 @@ namespace EliteSharp.Events.Models
 {
     public class MaterialDiscovered : EventBase
     {
-        public enum CategoryEnum
-        {
-            [DataMember(Name = "Encoded")] Encoded,
-            [DataMember(Name = "Manufactured")] Manufactured,
-            [DataMember(Name = "Raw")] Raw
-        }
-
-        [DataMember(Name = "Category")] public CategoryEnum Category { get; set; }
+        [DataMember(Name = "Category")] public string Category { get; set; }
 
         [DataMember(Name = "Name")] public string Name { get; set; }
 

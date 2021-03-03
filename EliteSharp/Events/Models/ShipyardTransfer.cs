@@ -1,14 +1,13 @@
 using System.Runtime.Serialization;
-using EliteSharp.GameModel;
 
 namespace EliteSharp.Events.Models
 {
     public class ShipyardTransfer : EventBase
     {
-        [DataMember(Name = "ShipType")] public ShipTypeEnum ShipType { get; set; }
+        [DataMember(Name = "ShipType")] public string ShipType { get; set; }
 
         [DataMember(Name = "ShipType_Localised", IsRequired = false)]
-        public ShipTypeLocalisedEnum? ShipTypeLocalised { get; set; }
+        public string? ShipTypeLocalised { get; set; }
 
         [DataMember(Name = "ShipID")] public long ShipId { get; set; }
 

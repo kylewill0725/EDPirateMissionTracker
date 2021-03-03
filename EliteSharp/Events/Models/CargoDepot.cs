@@ -4,16 +4,9 @@ namespace EliteSharp.Events.Models
 {
     public class CargoDepot : EventBase
     {
-        public enum UpdateTypeEnum
-        {
-            [DataMember(Name = "Collect")] Collect,
-            [DataMember(Name = "Deliver")] Deliver,
-            [DataMember(Name = "WingUpdate")] WingUpdate
-        }
-
         [DataMember(Name = "MissionID")] public long MissionId { get; set; }
 
-        [DataMember(Name = "UpdateTypeEnum")] public UpdateTypeEnum UpdateType { get; set; }
+        [DataMember(Name = "UpdateType")] public string UpdateType { get; set; }
 
         [DataMember(Name = "StartMarketID")] public long StartMarketId { get; set; }
 

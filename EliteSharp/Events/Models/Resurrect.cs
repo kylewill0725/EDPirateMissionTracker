@@ -4,12 +4,7 @@ namespace EliteSharp.Events.Models
 {
     public class Resurrect : EventBase
     {
-        public enum OptionEnum
-        {
-            [DataMember(Name = "rebuy")] Rebuy
-        }
-
-        [DataMember(Name = "Option")] public OptionEnum Option { get; set; }
+        [DataMember(Name = "Option")] public string Option { get; set; }
 
         [DataMember(Name = "Cost")] public long Cost { get; set; }
 
