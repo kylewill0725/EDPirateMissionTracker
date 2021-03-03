@@ -13,8 +13,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="JournalEventImplementation\EventHandler.template.cs" />
-      <EmbeddedResource Include="JournalEventImplementation\EventHandler.template.cs" />
+        <Compile Remove="JournalEventImplementation\Events.template.cs" />
+        <EmbeddedResource Include="JournalEventImplementation\Events.template.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="JournalEventImplementation\IEvents.template.cs" />
+      <EmbeddedResource Include="JournalEventImplementation\IEvents.template.cs" />
     </ItemGroup>
 
 </Project>

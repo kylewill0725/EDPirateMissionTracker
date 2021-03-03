@@ -12,25 +12,35 @@ namespace CodeGeneration.JournalEventImplementation
     [Generator]
     public class EventImplementationGenerator : ISourceGenerator
     {
-        private string _formatString;
-        
+        private string _classFormatString;
+        private string _interfaceFormatString;
+
         // Run once during build
         public void Initialize(GeneratorInitializationContext context)
         {
             // if (!Debugger.IsAttached) // Uncomment if debugging needed
             //     Debugger.Launch();
-            
+
             // Load EventHandler template from the EmbeddedResources into the _formatString variable
             var assembly = typeof(EventImplementationGenerator).GetTypeInfo().Assembly;
-            var eventHandlerTemplate = assembly.GetManifestResourceStream("CodeGeneration.JournalEventImplementation.EventHandler.template.cs");
-            if (eventHandlerTemplate != null)
+            var eventsTemplate =
+                assembly.GetManifestResourceStream(
+                    "CodeGeneration.JournalEventImplementation.Events.template.cs");
+            var iEventsTemplate =
+                assembly.GetManifestResourceStream(
+                    "CodeGeneration.JournalEventImplementation.IEvents.template.cs");
+            if (eventsTemplate != null && iEventsTemplate != null)
             {
-                using (var sr = new StreamReader(eventHandlerTemplate))
+                using (var sr = new StreamReader(eventsTemplate))
                 {
-                    _formatString = sr.ReadToEnd();
+                    _classFormatString = sr.ReadToEnd();
+                }
+                using (var sr = new StreamReader(iEventsTemplate))
+                {
+                    _interfaceFormatString = sr.ReadToEnd();
                 }
             }
-            
+
             context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
         }
 
@@ -39,51 +49,44 @@ namespace CodeGeneration.JournalEventImplementation
         {
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver)) return;
 
-            var linesToAdd = new List<string>();
-            foreach (var interfaceDeclarationSyntax in receiver.IEventHandlerDeclarations)
+            var classLinesToAdd = new List<string>();
+            var interfaceLinesToAdd = new List<string>();
+            foreach (var classDeclaration in receiver.IEventHandlerDeclarations)
             {
-                foreach (var member in interfaceDeclarationSyntax.Members.OfType<EventFieldDeclarationSyntax>())
-                {
-                    // Set to T in public event EventHandler<T> NAME
-                    var typeString = "";
-                    var type = member.Declaration.Type;
-                    if (type is GenericNameSyntax genericType) // All events are of type EventHandler<T> so this should always be true.
-                    {
-                        typeString =
-                            string.Join(",",
-                                genericType.TypeArgumentList.Arguments
-                                        .OfType<IdentifierNameSyntax>()
-                                        .Select(t => t.Identifier.Text)
-                                );
-                    }
-                    
-                    // Set to NAME in public event EventHandler<T> NAME;
-                    var variableNameString = member.Declaration.Variables.Select(v => v.Identifier.Text).First();
-                    
-                    // Add event handler to lines to be added to template.
-                    linesToAdd.Add($@"public event EventHandler<{typeString}> {variableNameString};");
-                    
-                    // Add event invoker to lines to be added to template.
-                    linesToAdd.Add($@"internal void Invoke{variableNameString}({typeString} arg) => {variableNameString}?.Invoke(this, arg);");
-                }
+                var eventName = classDeclaration.Identifier.ValueText;
+
+                // Add event handler to lines to be added to template.
+                classLinesToAdd.Add($@"public event EventHandler<{eventName}> {eventName};");
+                interfaceLinesToAdd.Add($@"event EventHandler<{eventName}> {eventName};");
+
+                // Add event invoker to lines to be added to template.
+                classLinesToAdd.Add(
+                    $@"internal void Invoke{eventName}({eventName} arg) => {eventName}?.Invoke(this, arg);");
             }
 
-            var source =
-                string.Format(_formatString,
-                    string.Join("\n", linesToAdd)
+            var classSource =
+                string.Format(_classFormatString,
+                    string.Join("\n", classLinesToAdd)
                 );
-            context.AddSource("EventHandler.g.cs", source);
+
+            var interfaceSource =
+                string.Format(_interfaceFormatString,
+                    string.Join("\n", interfaceLinesToAdd)
+                );
+            context.AddSource("Events.g.cs", classSource);
+            context.AddSource("IEvents.g.cs", interfaceSource);
         }
     }
 
     public class SyntaxReceiver : ISyntaxReceiver
     {
-        private readonly List<InterfaceDeclarationSyntax> _iEventHandlerDeclarations = new List<InterfaceDeclarationSyntax>();
-        public IEnumerable<InterfaceDeclarationSyntax> IEventHandlerDeclarations => _iEventHandlerDeclarations;
+        private readonly List<ClassDeclarationSyntax> _iEventHandlerDeclarations = new List<ClassDeclarationSyntax>();
+        public IEnumerable<ClassDeclarationSyntax> IEventHandlerDeclarations => _iEventHandlerDeclarations;
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            if (syntaxNode is InterfaceDeclarationSyntax ids && ids.Identifier.Text == "IEventHandler")
+            if (syntaxNode is ClassDeclarationSyntax ids && ids.BaseList?.DescendantNodes()
+                .OfType<IdentifierNameSyntax>().Any(ins => ins.Identifier.ValueText == "EventBase") == true)
             {
                 _iEventHandlerDeclarations.Add(ids);
             }
